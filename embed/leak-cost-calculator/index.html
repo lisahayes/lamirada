@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leak Cost Calculator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Source Sans 3",system-ui,sans-serif;padding:16px;background:transparent;color:#222;font-size:15px}
+h2{font-size:1.1rem;margin-bottom:12px;color:#0e6b5e}
+.form-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+label{font-size:0.85rem;font-weight:600;color:#555}
+select,input[type=number]{width:100%;padding:8px 10px;border:1.5px solid #ccc;border-radius:6px;font-size:15px}
+.btn-sm{padding:5px 10px;border:1.5px solid #0e6b5e;border-radius:6px;background:#fff;color:#0e6b5e;cursor:pointer;font-size:0.82rem}
+.result{margin-top:16px;padding:14px;background:#f0faf8;border-radius:8px;border-left:3px solid #0e6b5e;display:none}
+.cost{font-size:1.05rem;font-weight:700;color:#0e6b5e;margin:8px 0}
+.alert{background:#fff3cd;padding:8px 12px;border-radius:6px;font-size:0.85rem;margin:8px 0}
+.sewer{font-size:0.8rem;color:#666;margin:4px 0}
+a.cta{display:inline-block;margin-top:10px;background:#d0431c;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:700}
+.powered{margin-top:14px;font-size:0.75rem;color:#888;text-align:center}
+</style>
+</head>
+<body>
+<script>
+var E_T1=2.36,E_T2=3.75,E_BRK=15,E_HH=8;
+function calcEmbed(){
+    var type=document.getElementById("e-type").value;
+    var drips=parseFloat(document.getElementById("e-drips").value)||60;
+    var tgpd=parseFloat(document.getElementById("e-toilet-gpd").value)||480;
+    var sgph=parseFloat(document.getElementById("e-stream-gph").value)||5;
+    var spgph=parseFloat(document.getElementById("e-sprnk-gph").value)||60;
+    var count=parseInt(document.getElementById("e-count").value)||1;
+    var gpd=0;
+    if(type==="drip")gpd=(drips*60*24)/15140;
+    if(type==="toilet")gpd=tgpd;
+    if(type==="stream")gpd=sgph*24;
+    if(type==="sprinkler")gpd=spgph*24;
+    gpd*=count;
+    var gpm=gpd*30.44,gpy=gpd*365,ccfM=gpm/748;
+    var t1=Math.min(ccfM,Math.max(0,E_BRK-E_HH)),t2=Math.max(0,ccfM-Math.max(0,E_BRK-E_HH));
+    var costM=t1*E_T1+t2*E_T2,costY=costM*12;
+    var res=document.getElementById("e-result");
+    res.style.display="block";
+    res.innerHTML="<p class=\"cost\">$"+costM.toFixed(2)+"/mo &nbsp; $"+costY.toFixed(0)+"/yr (water only)</p>"+
+        "<p>"+Math.round(gpm).toLocaleString()+" gallons/month &nbsp; "+Math.round(gpy).toLocaleString()+" gallons/year</p>"+
+        (t2>0?"<p class=\"alert\">Tier 2 alert: usage may exceed the tier break.</p>":"")+
+        "<p class=\"sewer\">Sewer billed separately by LA County Sanitation Districts.</p>"+
+        "<a href=\"tel:+15624889614\" class=\"cta\">Call (562) 488-9614</a>";
+}
+function showE(){
+    var type=document.getElementById("e-type").value;
+    document.getElementById("e-drip-row").style.display=type==="drip"?"block":"none";
+    document.getElementById("e-toilet-row").style.display=type==="toilet"?"block":"none";
+    document.getElementById("e-stream-row").style.display=type==="stream"?"block":"none";
+    document.getElementById("e-sprnk-row").style.display=type==="sprinkler"?"block":"none";
+    calcEmbed();
+}
+function setED(v){document.getElementById("e-drips").value=v;calcEmbed();}
+document.addEventListener("DOMContentLoaded",function(){
+    document.getElementById("e-type").addEventListener("change",showE);
+    document.getElementById("e-count").addEventListener("input",calcEmbed);
+    ["e-drips","e-toilet-gpd","e-stream-gph","e-sprnk-gph"].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener("input",calcEmbed);});
+    showE();
+});
+</script>
+<h2>Leak Cost Calculator</h2>
+<div class="form-row"><label>Leak type</label><select id="e-type"><option value="drip">Dripping faucet</option><option value="toilet">Running toilet</option><option value="stream">Trickle/stream</option><option value="sprinkler">Irrigation leak</option></select></div>
+<div id="e-drip-row"><div class="form-row"><label>Drips per minute</label><input type="number" id="e-drips" value="60"></div><div style="display:flex;gap:6px;margin-bottom:12px"><button class="btn-sm" onclick="setED(10)">Slow</button><button class="btn-sm" onclick="setED(60)">Steady</button><button class="btn-sm" onclick="setED(120)">Fast</button></div></div>
+<div id="e-toilet-row" style="display:none"><div class="form-row"><label>Gallons per day</label><input type="number" id="e-toilet-gpd" value="480"></div></div>
+<div id="e-stream-row" style="display:none"><div class="form-row"><label>Gallons per hour</label><input type="number" id="e-stream-gph" value="5" step="0.1"></div></div>
+<div id="e-sprnk-row" style="display:none"><div class="form-row"><label>Gallons per hour</label><input type="number" id="e-sprnk-gph" value="60"></div></div>
+<div class="form-row"><label>Number of fixtures</label><input type="number" id="e-count" value="1" min="1" max="20"></div>
+<div id="e-result" class="result"></div>
+<p class="powered">Powered by <a href="https://lamiradaleakrepairpros.com">La Mirada Leak Repair Pros</a></p>
+</body></html>

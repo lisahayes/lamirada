@@ -1,0 +1,10 @@
+# Enforce trailing-slash-free clean URLs (Cloudflare Pages handles /path/ → /path automatically)
+# Strip .html extensions from any accidental link
+/*.html   /:splat   301
+
+# Redirect www to apex (Cloudflare handles the domain-level rewrite; this is defensive)
+# https://www.lamiradaleakrepairpros.com/*  https://lamiradaleakrepairpros.com/:splat  301
+
+# Legacy path safety nets (in case older URLs are indexed anywhere)
+/services/burst-pipe-la-mirada           /blog/burst-pipe-la-mirada           301
+/services/water-bill-doubled-la-mirada   /blog/water-bill-doubled-la-mirada   301
